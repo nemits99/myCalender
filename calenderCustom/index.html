@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyCalender</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: #000000;
+            text-align: center;
+        }
+
+        .calendar-container {
+            background: #000;
+            padding: 0px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+        }
+   h2{
+       color:#ddd;
+       margin-top:0px;
+   }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0px;
+        }
+
+        header button {
+            background-color: green;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top:-15px;
+        }
+
+        header button:hover {
+            background-color: #0056b3;
+        }
+
+        .days-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 10px;
+            background-color:darkred;
+            color: #fff;
+            padding:10px;
+        }
+
+        .dates-container {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            padding:15px;
+            background-color:#000;
+            margin-top:-10px;
+        }
+
+        .date {
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            background: #000000;
+            color: #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .date:hover {
+            background: #007BFF;
+            color: white;
+        }
+
+        .holiday-mark {
+            background-color: red;
+            color: white;
+            font-weight: bold;
+            border-radius:50%;
+        }
+
+        .today {
+            background-color: blue;
+            color: white;
+            font-weight: bold;
+            border: 2px solid #0056b3;
+            border-radius: 50%;
+        }
+
+        .header-container {
+            padding-top: 5px;
+            width:370px;
+            background: linear-gradient(to bottom, blue, lightblue);
+            
+        }
+#calender{
+    font-size:26px;
+    color:red;
+}
+#almahira{
+    font-size:20px;
+    color:#333;
+    text-align:left;
+}    
+        .dates-container div:empty {
+            visibility: hidden;
+        }
+    #holidayText{
+        padding:10px;
+        border :1px solid green;
+        background-color:#000;
+        color:#ddd;
+    }
+    #workText{
+        padding:10px;
+        border :1px solid green;
+        background-color:#000;
+        color:green;
+    }
+    </style>
+</head>
+<body>
+    <div class="header-container">
+        <p id="calender"> Calender Custom</p>
+          <p id="almahira"> @lmahira.com</p>
+    </div>
+    
+    <div class="calendar-container">
+        <header>
+            <button id="prev-month">&lt;</button>
+            <h2 id="current-month-year"></h2>
+            <button id="next-month">&gt;</button>
+        </header>
+        <div class="days-header">
+            <div>Sen</div>
+            <div>Sel</div>
+            <div>Rab</div>
+            <div>Kam</div>
+            <div>Jum</div>
+            <div>Sab</div>
+            <div>Min</div>
+        </div>
+        <div id="dates-container" class="dates-container"></div>
+
+        <div id="holidayText"></div>
+        <div id="workText"></div>
+    </div>
+  
+    <script>
+        // Daftar tanggal merah (format MM-DD)
+        const holidays = ["01-01", "01-27", "01-29", "03-29", "03-31", "04-01", "04-18", "04-20", "05-01", "05-12", "05-29",
+            "06-01", "06-06", "06-27", "08-17", "09-05", "12-25"];
+
+        const holidayNames = {
+            "01-01": "Tahun Baru 2025 Masehi",
+            "01-27": "Isra Mikraj Nabi Muhammad Saw",
+            "01-29": "Tahun Baru Imlek 2576 Kongzili",
+            "03-29": "Hari Suci Nyepi (Tahun Baru Saka 1947)",
+            "03-31": "Idul Fitri 1446 Hijriah",
+            "04-01": "Idul Fitri 1446 Hijriah",
+            "04-18": "Wafat Yesus Kristus",
+            "04-20": "Kebangkitan Yesus Kristus (Paskah)",
+            "05-01": "Hari Buruh Internasional",
+            "05-12": "Hari Raya Waisak 2569 BE",
+            "05-29": "Kenaikan Yesus Kristus",
+            "06-01": "Hari Lahir Pancasila",
+            "06-06": "Idul Adha 1446 Hijriah",
+            "06-27": "1 Muharam Tahun Baru Islam 1447 Hijriah",
+            "08-17": "Proklamasi Kemerdekaan",
+            "09-05": "Maulid Nabi Muhammad Saw",
+            "12-25": "Kelahiran Yesus Kristus"
+        };
+
+        const currentDate = new Date();
+        let currentMonth = currentDate.getMonth();
+        let currentYear = currentDate.getFullYear();
+
+        const monthNames = [
+            "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+            "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+        ];
+
+        const workSchedules = [
+            { date: "01-03", description: "Meeting Tim A" },
+            { date: "01-15", description: "Presentasi Proyek" },
+            { date: "01-20", description: "Deadline Laporan" }
+        ];
+
+        // Inisialisasi kalender
+        function initCalendar() {
+            const header = document.getElementById("current-month-year");
+            header.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+            generateCalendar();
+        }
+
+        // Fungsi untuk mengganti bulan
+        document.getElementById("prev-month").addEventListener("click", () => {
+            if (currentMonth === 0) {
+                currentMonth = 11;
+                currentYear--;
+            } else {
+                currentMonth--;
+            }
+            initCalendar();
+        });
+
+        document.getElementById("next-month").addEventListener("click", () => {
+            if (currentMonth === 11) {
+                currentMonth = 0;
+                currentYear++;
+            } else {
+                currentMonth++;
+            }
+            initCalendar();
+        });
+
+        function generateCalendar() {
+            const datesContainer = document.getElementById("dates-container");
+            const holidayText = document.getElementById("holidayText");
+            const workText = document.getElementById("workText");
+
+            datesContainer.innerHTML = ""; // Reset kalender
+            holidayText.innerHTML = "Libur: "; // Reset teks tanggal merah
+            workText.innerHTML = "Jadwal Kerja: "; // Reset teks jadwal kerja
+
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            let holidayList = []; // Simpan daftar tanggal merah
+
+            // Dapatkan tanggal saat ini
+            const today = new Date();
+            const isCurrentMonth = currentYear === today.getFullYear() && currentMonth === today.getMonth();
+            const currentDay = isCurrentMonth ? today.getDate() : null;
+
+            // Tambahkan tanggal kosong di awal bulan
+            for (let i = 0; i < (firstDay === 0 ? 6 : firstDay - 1); i++) {
+                const emptyDiv = document.createElement("div");
+                emptyDiv.className = "date"; // Tambahkan agar konsisten
+                datesContainer.appendChild(emptyDiv);
+            }
+
+            // Generate tanggal
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dateDiv = document.createElement("div");
+                const day = i.toString().padStart(2, '0'); // Format dua digit
+                const month = (currentMonth + 1).toString().padStart(2, '0'); // Format dua digit
+                const dateStr = `${month}-${day}`;
+
+                dateDiv.className = "date";
+                dateDiv.textContent = i;
+
+                // Tandai tanggal merah
+                if (holidays.includes(dateStr)) {
+                    dateDiv.classList.add("holiday-mark");
+                    holidayList.push(`${i} ${holidayNames[dateStr] || ""}`);
+                }
+
+                // Tandai tanggal hari ini
+                if (i === currentDay) {
+                    dateDiv.classList.add("today");
+                }
+
+                datesContainer.appendChild(dateDiv);
+            }
+
+// Tampilkan daftar tanggal merah
+            if (holidayList.length > 0) {
+                holidayText.innerHTML += holidayList.join(", ");
+            } else {
+                holidayText.innerHTML += "Tidak ada tanggal merah.";
+            }
+
+            // Tampilkan jadwal kerja
+            const workList = [];
+            workSchedules.forEach((work) => {
+                const [workMonth, workDay] = work.date.split("-");
+                if (parseInt(workMonth) === currentMonth + 1 && currentYear === today.getFullYear()) {
+                    workList.push(`${parseInt(workDay)}: ${work.description}`);
+                }
+            });
+
+            if (workList.length > 0) {
+                workText.innerHTML += workList.join(", ");
+            } else {
+                workText.innerHTML += "Tidak ada jadwal kerja.";
+            }
+        }
+
+        // Inisialisasi kalender saat halaman dimuat
+        document.addEventListener("DOMContentLoaded", () => {
+            initCalendar();
+        });
+    </script>
+      <script>
+        // Daftar service worker
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./service-worker.js")
+    .then((registration) => {
+        console.log("Service Worker terdaftar dengan sukses:", registration.scope);
+    })
+    .catch((error) => {
+        console.log("Service Worker pendaftaran gagal:", error);
+    });
+}
+    </script>
+</body>
+</html>
